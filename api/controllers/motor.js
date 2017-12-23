@@ -10,7 +10,8 @@ class Motor {
 
         // Set "static" pin definition
         this.dirPin = 26;
-        this.stepPin = 19;
+        this.pwmInPin = 22;
+        this.stepPin = 27;
         this.nSleepPin = 13;
         this.nResetPin = 6;
         this.nEnablePin = 5;
@@ -18,7 +19,6 @@ class Motor {
         this.msi1Pin = 10;
         this.msi2Pin = 9;
         this.msi3Pin = 11;
-        this.pwmInPin = 22;
 
         // Declare and nit piopig pin objects
         this.dir = new pigpio.Gpio(this.dirPin, {mode: pigpio.Gpio.OUTPUT});
