@@ -1,0 +1,24 @@
+{
+  "name": "motor-api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon server.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "nodemon": "^1.12.1"
+  },
+  "dependencies": {
+    "cors": "^2.8.4",
+    "express": "^4.16.2",
+    "mongoose": "^4.12.5",
+    "onoff": "^1.1.8",
+    "pigpio": "^0.6.2",
+    "rpi-gpio": "^0.9.1",
+    "ws": "^3.2.0"
+  }
+}

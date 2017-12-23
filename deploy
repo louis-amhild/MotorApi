@@ -1,0 +1,7 @@
+#!/bin/sh
+echo "** Build Motor API **"
+#npm run ionic:build --prod
+rsync -ah -v --progress --info=progress2 ../MotorApi /nfs/piw/html
+
+ssh -X 192.168.10.120 'cd /var/www/html/MotorApi && npm run start &'
+
