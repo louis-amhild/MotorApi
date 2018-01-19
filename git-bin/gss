@@ -1,0 +1,10 @@
+#!/bin/sh
+echo 
+echo "Top folder '${PWD##*/}'";
+echo --------------------- && git status && echo && glg HEAD~5..HEAD && echo 
+
+
+git submodule foreach "echo --------------------- && git status && echo && glg HEAD~5..HEAD && echo "
+
+
+
