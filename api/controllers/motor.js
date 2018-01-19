@@ -20,6 +20,8 @@ class Motor {
         this.msi2Pin = 9;
         this.msi3Pin = 11;
 
+        this.endStopPin = 14;
+
         // Declare and nit piopig pin objects
         this.dir = new pigpio.Gpio(this.dirPin, {mode: pigpio.Gpio.OUTPUT});
         this.step = new pigpio.Gpio(this.stepPin, {mode: pigpio.Gpio.OUTPUT});
@@ -30,6 +32,15 @@ class Motor {
         this.msi1 = new pigpio.Gpio(this.msi1Pin, {mode: pigpio.Gpio.OUTPUT});
         this.msi2 = new pigpio.Gpio(this.msi2Pin, {mode: pigpio.Gpio.OUTPUT});
         this.msi3 = new pigpio.Gpio(this.msi3Pin, {mode: pigpio.Gpio.OUTPUT});
+
+        this.endStop = new pigpio.Gpio(this.endStopPin, {mode: pigpio.Gpio.INPUT});
+        // this.endStop = new onoff.Gpio(this.endStopPin, 'in', 'faling');
+        // this.endStop.watch( (err, value) => {
+        //     if (err) {
+        //         throw err;
+        //     }
+        //     console.log("Endstop detected");
+        // });
 
         this.maxSteps = -1;
 
@@ -42,9 +53,9 @@ class Motor {
             }
             this.stepCount += 1;
 
-            if(this.maxSteps > 0 && this.stepCount >= this.maxSteps-3) {
-                this.setSpeed(10, "tmp");
-            }
+            // if(this.maxSteps > 0 && this.stepCount >= this.maxSteps-3) {
+            //     this.setSpeed(10, "tmp");
+            // }
 
             if(this.maxSteps > 0 && this.stepCount >= this.maxSteps) {
                 this.stopMotor();
@@ -79,6 +90,7 @@ class Motor {
         this.step.pwmFrequency(0);
         this.nEnable.digitalWrite(1);
         this.motorRunning = false;
+        console.log("Moved " + this.stepCount + " steps");
         console.log("Missing steps: " + (this.maxSteps - this.stepCount));
         // Reset max steps
         this.maxSteps = -1;
