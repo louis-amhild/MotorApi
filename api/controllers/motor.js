@@ -1,9 +1,12 @@
 let pigpio = require('pigpio');
 let onoff = require('onoff');
-
 // Motor class
 class Motor {
-    constructor() {
+    constructor(broadcastStatus) {
+        this.state = "init";
+        this.sendStatus = broadcastStatus;
+        this.statusTimer = null;
+
         // Motor speed in Hz
         this.speed = 800;
         this.motorRunning = false;
@@ -61,6 +64,11 @@ class Motor {
                 this.stopMotor();
             }
         });
+
+        // Init stopped
+        setTimeout( () => {
+            this.stopMotor()
+        }, 600);
     }
 
     write(pin, value) {
@@ -72,17 +80,51 @@ class Motor {
         });
     }
 
+    getStatus() {
+        return {
+                   "state": this.state,
+                   "speed" : this.getSpeed(),
+                   "stepsMoved": this.stepCount,
+                   "revolutionMoved": (Math.round(this.stepCount / 20)/10),
+       }
+    }
+
+    cancelStatusTimer() {
+        if(this.statusTimer) {
+            clearInterval(this.statusTimer);
+            this.statusTimer = null;
+        }
+    }
+
+    startStatusTimer() {
+        // Cancel any previous sessions
+        this.cancelStatusTimer();
+
+        // Send first status
+        this.sendStatus(this.getStatus());
+
+        // Enable timer
+        this.statusTimer = setInterval( () => {
+            this.sendStatus(this.getStatus());
+        }, 100);
+    }
+
     startMotor() {
         this.stepCount = 0;
 
-        console.log("Start motor at " + this.speed + " Hz");
+        console.log("Start motor at" + this.speed + " Hz");
         this.nEnable.digitalWrite(0);
         // 50% duty cycle
         this.step.pwmWrite(128);
         // Speed in Hz
         this.step.pwmFrequency(this.speed);
         this.motorRunning = true;
-        return {"status" : "running", "speed": this.speed};
+        this.state = "running";
+
+        this.startStatusTimer();
+
+        return this.getStatus();
+
     }
 
     stopMotor() {
@@ -94,10 +136,12 @@ class Motor {
         console.log("Missing steps: " + (this.maxSteps - this.stepCount));
         // Reset max steps
         this.maxSteps = -1;
-        return  {   "status": "stopped",
-                    "stepsMoved": this.stepCount,
-                    "revolutionMoved": (Math.round(this.stepCount / 20)/10),
-        }
+        this.state = "stopped";
+        // Stop status timer and send last state
+        this.cancelStatusTimer();
+        this.sendStatus(this.getStatus());
+
+        return this.getStatus();
     }
 
     stepMotor(steps) {
@@ -108,7 +152,9 @@ class Motor {
 
     setSpeed(speed, tmp) {
         if(speed < 0 || speed > 2000) {
-            return "Please specify a motor speed between 0 and 2000 Hz (max from cold start 1200)";
+            let msg = "Please specify a motor speed between 0 and 2000 Hz (max from cold start 1200)";
+            this.sendStatus(this.getStatus(), msg);
+            return msg;
         }
         if(!tmp)
             this.speed = speed;
@@ -119,6 +165,7 @@ class Motor {
             // Speed in Hz
             this.step.pwmFrequency(speed);
         }
+        this.sendStatus(this.getStatus(), "Speed Updated");
         return "";
     }
 

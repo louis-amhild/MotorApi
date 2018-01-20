@@ -4,6 +4,7 @@ const WebSocket = require('ws');
 
 let motor = null;
 let wss = null;
+let statusListners = [];
 
 class MotorRoute {
     constructor(app) {
@@ -38,7 +39,7 @@ class MotorRoute {
 
     init() {
         // Init motor wrapper
-        motor = new Motor();
+        motor = new Motor(this.broadcastStatus);
         motor.init();
     }
 
@@ -105,18 +106,32 @@ class MotorRoute {
             wss = new WebSocket.Server({ port: 3001 });
             // init Websocket ws and handle incoming connect requests
             wss.on('connection', (ws) => {
-                console.log("connection ...");
-
                 // on connect message
-                ws.on('message', function incoming(message) {
-                    console.log('received: %s', message);
-                    connectedUsers.push(message);
+                // ws.on('message', function incoming(message) {
+                //     console.log('received: %s', message);
+                // });
+                let rsp = motor.getStatus()
+                rsp.msg = "Greetings client, time is " + new Date();
+                ws.on('close', () => {
+                  console.log('Client disconnected');
+                  // TODO Handle better for now just remove all clients
+                  statusListners = [];
                 });
-                ws.send('message from server at: ' + new Date());
+                ws.send(JSON.stringify(rsp));
+                statusListners.push(ws);
             });
+
         }
-        res.json({ "status": { "motor": "running"}, "ws" : "192.168.10.120" + ":" + 3001});
+        res.json({ws : "ws://192.168.10.120" + ":" + 3001});
     }
 
+    broadcastStatus( status, msg ) {
+        // Generate message
+        status.msg = msg ? msg : "";
+        // Send to all clients
+        for(let ws of statusListners) {
+            ws.send(JSON.stringify(status));
+        }
+    }
 }
 module.exports = MotorRoute;
